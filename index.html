@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Q &amp; Aign Maker</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1 class="heading">Q &amp; Aign Maker</h1>
+    <div class="main">
+      <p class="info">Upload jsons to create a Q &amp; Aign.</p>
+      <button id="upload" class="upload-btn">Upload</button>
+      <input type="file" multiple accept=".json" class="hidden" id="files" />
+      <p id="preview-info" class="info"></p>
+      <div class="preview" id="preview"></div>
+      <div class="selected-info" id="selected"></div>
+      <div class="chapter-output" id="chapter"></div>
+      <button id="download" class="download-btn hidden">Download</button>
+      <dialog id="download-dialog">
+        <form method="dialog" id="download-form">
+          <input
+            name="chapter-name"
+            id="chapter-name"
+            value="Chapter 1"
+            required
+          />
+          <button id="form-download-btn">Download</button>
+          <button formmethod="dialog" id="form-cancel-btn">Cancel</button>
+        </form>
+      </dialog>
+    </div>
+    <script type="module" src="index.js"></script>
+  </body>
+</html>

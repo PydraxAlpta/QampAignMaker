@@ -1,0 +1,113 @@
+:root {
+  --message-background: transparent;
+  --message-background-hover: #6668;
+  --message-background-selected: #6668;
+  --message-background-selected-hover: #666b;
+}
+body {
+  max-width: 960px;
+}
+.hidden {
+  display: none;
+}
+.message-channel {
+  margin: 0.5rem 0;
+}
+.message .content {
+  padding-left: 1em;
+}
+.content.more {
+  font-style: italic;
+  opacity: 0.8;
+  list-style-type: none;
+}
+.message {
+  transition: background-color 0.5s;
+  list-style-type: none;
+  background-color: var(--message-background);
+}
+.message:hover:not(.no-select) {
+  background-color: var(--message-background-hover);
+}
+.message.selected {
+  background-color: var(--message-background-selected);
+  list-style-type: disc;
+}
+.message.selected:hover {
+  background-color: var(--message-background-selected-hover);
+}
+.message-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 400px;
+  overflow-y: auto;
+}
+.message-list.condensed {
+  max-height: 300px;
+  padding-inline-start: 20px;
+}
+.selected-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.cards-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 1.5rem;
+  overflow-y: auto;
+}
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  box-shadow: 0.25rem 0.25rem 0.5rem 0.1rem var(--background-alt);
+  border-radius: 0.5rem;
+  max-width: 320px;
+  background-color: var(--background-alt);
+  flex: none;
+}
+.card-header {
+  padding-inline-start: 20px;
+  font-weight: bold;
+}
+.card-add-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.chapter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-right: 20px;
+}
+.chapter-remove-button {
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 24px;
+  height: 24px;
+}
+.chapter-output:not(:empty) {
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
