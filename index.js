@@ -278,13 +278,19 @@ function addChapter(channelId, messageIds) {
   renderChapters();
 }
 
+function removeChapter(index) {
+  chapterItems.splice(index, 1);
+  renderChapters();
+}
+
 function renderChapters() {
   chapter.innerHTML = "";
   if (!chapterItems.length) {
     downloadBtn.classList.add("hidden");
     return;
   }
-  for (const { channelId, messageIds } of chapterItems) {
+  for (let index = 0; index < chapterItems.length; ++index) {
+    const { channelId, messageIds } = chapterItems[index];
     const channel = channelJson[channelId]?.channel;
     const messages = channelJson[channelId]?.messages;
     if (!channel || !messages) {
@@ -313,7 +319,7 @@ function renderChapters() {
     removeButton.classList.add("chapter-remove-button");
     removeButton.addEventListener("click", () => {
       console.log("Remove button clicked", channelId, messageIds);
-      chapterElement.remove();
+      removeChapter(index);
     });
     header.appendChild(removeButton);
     chapterElement.appendChild(header);
