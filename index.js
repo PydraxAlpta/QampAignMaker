@@ -74,7 +74,7 @@ const channelJson = {};
 function getProcessedJson(json) {
   const channel = json.channel;
   const messages = json.messages;
-  channelJson[channel.id] = { channel, messages };
+  channelJson[channel.id] = json;
   const result = [];
   for (let index = 0; index < messages.length; index++) {
     const message = messages[index];
