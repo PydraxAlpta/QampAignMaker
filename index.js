@@ -14,17 +14,14 @@ uploadBtn.addEventListener("click", function () {
   fileInput.click();
 });
 fileInput.addEventListener("change", handleChange);
+const loadedFiles = [];
 async function handleChange() {
   const files = fileInput?.files;
   if (!files?.length) {
     previewInfo.textContent = "No files selected";
-    preview.innerHTML = "";
-    selected.innerHTML = "";
     return;
   }
   previewInfo.textContent = `Files loaded: ${files.length}`;
-  preview.innerHTML = "";
-  selected.innerHTML = "";
   for (const file of files) {
     const name = file.name;
     if (!name.endsWith(".json")) {
@@ -50,31 +47,72 @@ async function handleChange() {
       reader.readAsText(file);
     });
     // write into preview
-    const details = document.createElement("details");
-    details.name = "channel";
-    details.classList.add("message-channel");
-    details.dataset.channelid = contents?.channel?.id;
-    const summary = document.createElement("summary");
-    summary.textContent = name;
-    details.appendChild(summary);
-    if (!contents) {
-      details.classList.add("error");
-      preview.appendChild(details);
+    if (loadedFiles.some((file) => file.name === name)) {
+      alert(`File with name ${name} already present`);
       continue;
     }
+    loadedFiles.push({ name, contents });
+  }
+  loadFiles();
+}
+
+function loadFiles() {
+  preview.innerHTML = "";
+  selected.innerHTML = "";
+  for (const { name, contents } of loadedFiles) {
+    loadFile(name, contents, preview);
+  }
+}
+
+function loadFile(name, contents, preview) {
+  const details = document.createElement("details");
+  details.name = "channel";
+  details.classList.add("message-channel");
+  details.dataset.channelid = contents?.channel?.id;
+  const summary = document.createElement("summary");
+  summary.textContent = name;
+  details.appendChild(summary);
+  function handleError() {
+    details.open = true;
+    details.classList.add("error");
+    const errorText = document.createElement("span");
+    errorText.textContent = "An error happened reading the file";
+    details.appendChild(errorText);
+    preview.appendChild(details);
+  }
+  if (!contents || !Array.isArray(contents.messages)) {
+    handleError();
+    return;
+  }
+  try {
     const ul = document.createElement("ul");
     ul.classList.add("message-list");
-    const processedNodes = getProcessedJson(contents);
+    const processedNodes = getMessagesFromJson(contents);
     ul.replaceChildren(...processedNodes);
     details.appendChild(ul);
     preview.appendChild(details);
+  } catch {
+    handleError();
   }
 }
+
+function generateUniqueId() {
+  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+    return [...crypto.getRandomValues(new Uint8Array(6))]
+      .map((x) => x.toString(36).padStart(2, "0"))
+      .join("");
+  }
+  return (
+    Date.now().toString(36).slice(-6) + Math.random().toString(36).slice(2, 8)
+  );
+}
+
 const channelJson = {};
-function getProcessedJson(json) {
+function getMessagesFromJson(json) {
   const channel = json.channel;
   const messages = json.messages;
-  channelJson[channel.id] = json;
+  const uniqueId = generateUniqueId();
+  channelJson[uniqueId] = json;
   const result = [];
   for (let index = 0; index < messages.length; index++) {
     const message = messages[index];
@@ -83,6 +121,8 @@ function getProcessedJson(json) {
     li.classList.add("message");
     li.dataset.messageid = id;
     li.dataset.channelid = channel.id;
+    li.dataset.categoryid = channel.categoryId;
+    li.dataset.uniqueid = uniqueId;
     li.dataset.messageindex = index;
     li.dataset.messageitem = "";
     const spanAuthor = document.createElement("span");
@@ -111,9 +151,10 @@ function handleSelect(element) {
     }
     const isSelected = element.classList.contains("selected");
     const channelid = element.dataset.channelid;
+    const uniqueId = element.dataset.uniqueid;
     const index = Number(element.dataset.messageindex);
     const channelItems = preview.querySelectorAll(
-      `[data-messageitem][data-channelid='${channelid}']`
+      `[data-messageitem][data-uniqueid='${uniqueId}']`
     );
     const selectedItems = Array.from(channelItems).filter((el) =>
       el.classList.contains("selected")
@@ -208,7 +249,7 @@ function showSelectionInfo() {
   }
   const groupedItems = Object.groupBy(
     selectedItems,
-    (el) => el.dataset.channelid
+    (el) => el.dataset.uniqueid
   );
   const channelCount = Object.keys(groupedItems).length;
   const messageCount = selectedItems.length;
@@ -220,7 +261,7 @@ function showSelectionInfo() {
   selected.appendChild(span);
   const cardsContainer = document.createElement("div");
   cardsContainer.classList.add("cards-container");
-  for (const [channelid, items] of Object.entries(groupedItems)) {
+  for (const [uniqueId, items] of Object.entries(groupedItems)) {
     const channelItems = items.sort((a, b) =>
       Number(a.dataset.messageindex) > Number(b.dataset.messageindex) ? 1 : -1
     );
@@ -228,8 +269,8 @@ function showSelectionInfo() {
     card.classList.add("card");
     const header = document.createElement("div");
     header.classList.add("card-header");
-    const channelName = channelJson[channelid]?.channel?.name;
-    const categoryName = channelJson[channelid]?.channel?.category;
+    const channelName = channelJson[uniqueId]?.channel?.name;
+    const categoryName = channelJson[uniqueId]?.channel?.category;
     header.textContent = `${categoryName ?? "Uncategorized"} / #${channelName}`;
     card.appendChild(header);
     const ul = document.createElement("ul");
@@ -257,7 +298,7 @@ function showSelectionInfo() {
     addButton.classList.add("card-add-button");
     addButton.addEventListener("click", () => {
       addChapter(
-        channelid,
+        uniqueId,
         channelItems.map((el) => el.dataset.messageid)
       );
       items.forEach((item) => {
@@ -273,8 +314,8 @@ function showSelectionInfo() {
 
 const chapterItems = [];
 
-function addChapter(channelId, messageIds) {
-  chapterItems.push({ channelId, messageIds });
+function addChapter(uniqueId, messageIds) {
+  chapterItems.push({ uniqueId, messageIds });
   renderChapters();
 }
 
@@ -290,11 +331,11 @@ function renderChapters() {
     return;
   }
   for (let index = 0; index < chapterItems.length; ++index) {
-    const { channelId, messageIds } = chapterItems[index];
-    const channel = channelJson[channelId]?.channel;
-    const messages = channelJson[channelId]?.messages;
+    const { uniqueId, messageIds } = chapterItems[index];
+    const channel = channelJson[uniqueId]?.channel;
+    const messages = channelJson[uniqueId]?.messages;
     if (!channel || !messages) {
-      console.error("Channel not found", channelId);
+      console.error("Channel not found", uniqueId);
       continue;
     }
     const filteredMessages = messages.filter((message) =>
@@ -302,7 +343,8 @@ function renderChapters() {
     );
     const chapterElement = document.createElement("div");
     chapterElement.classList.add("chapter-item");
-    chapterElement.dataset.channelid = channelId;
+    chapterElement.dataset.uniqueid = uniqueId;
+    chapterElement.dataset.channelid = channel.id;
     chapterElement.dataset.firstmessageid = filteredMessages[0].id;
     chapterElement.dataset.lastmessageid =
       filteredMessages[filteredMessages.length - 1].id;
@@ -318,7 +360,7 @@ function renderChapters() {
     removeButton.textContent = "X";
     removeButton.classList.add("chapter-remove-button");
     removeButton.addEventListener("click", () => {
-      console.log("Remove button clicked", channelId, messageIds);
+      console.log("Remove button clicked", uniqueId, messageIds);
       removeChapter(index);
     });
     header.appendChild(removeButton);
@@ -360,10 +402,10 @@ function downloadChapter() {
     name,
     entries: [],
   };
-  for (const { channelId, messageIds } of chapterItems) {
-    const { messages, ...rest } = channelJson[channelId] ?? {};
+  for (const { uniqueId, messageIds } of chapterItems) {
+    const { messages, ...rest } = channelJson[uniqueId] ?? {};
     if (!messages) {
-      console.error("Channel not found", channelId);
+      console.error("Channel not found", uniqueId);
       continue;
     }
     const filteredMessages = messages.filter((message) =>
@@ -389,5 +431,3 @@ function downloadChapter() {
 
 downloadBtn.addEventListener("click", openDownloadDialog);
 formDownloadButton.addEventListener("click", downloadChapter);
-
-window.addEventListener("DOMContentLoaded", handleChange);
