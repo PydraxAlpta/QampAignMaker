@@ -21,7 +21,6 @@ async function handleChange() {
     previewInfo.textContent = "No files selected";
     return;
   }
-  previewInfo.textContent = `Files loaded: ${files.length}`;
   for (const file of files) {
     const name = file.name;
     if (!name.endsWith(".json")) {
@@ -59,12 +58,14 @@ async function handleChange() {
 function loadFiles() {
   preview.innerHTML = "";
   selected.innerHTML = "";
-  for (const { name, contents } of loadedFiles) {
-    loadFile(name, contents, preview);
+  for (let index = 0; index < loadedFiles.length; ++index) {
+    const { name, contents } = loadedFiles[index];
+    loadFile(name, contents, index, preview);
   }
+  previewInfo.textContent = `Files loaded: ${loadedFiles.length}`;
 }
 
-function loadFile(name, contents, preview) {
+function loadFile(name, contents, index, preview) {
   const details = document.createElement("details");
   details.name = "channel";
   details.classList.add("message-channel");
@@ -91,6 +92,15 @@ function loadFile(name, contents, preview) {
     ul.replaceChildren(...processedNodes);
     details.appendChild(ul);
     preview.appendChild(details);
+    const removeButton = document.createElement("button");
+    removeButton.textContent = "X";
+    removeButton.classList.add("file-remove-button");
+    removeButton.addEventListener("click", () => {
+      console.log("Remove button clicked", name, index);
+      loadedFiles.splice(index, 1);
+      loadFiles();
+    });
+    summary.appendChild(removeButton);
   } catch {
     handleError();
   }

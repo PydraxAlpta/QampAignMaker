@@ -12,6 +12,19 @@ body {
 }
 .message-channel {
   margin: 0.5rem 0;
+  position: relative;
+}
+.file-remove-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 1rem;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 24px;
+  height: 24px;
 }
 .message .content {
   padding-left: 1em;
